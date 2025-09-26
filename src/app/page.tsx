@@ -46,7 +46,7 @@ export default function UserDashboard() {
         });
         setStats(response.data);
         setError(null);
-      } catch (err: any) {
+      } catch (err) {
         setError('Failed to connect to the agent. Is it running?');
         console.error(err);
       } finally {

@@ -22,7 +22,7 @@ export default function LoginPage() {
       // On successful login, redirect to the dashboard.
       // In a real app, we would receive and store a JWT token here.
       router.push('/dashboard');
-    } catch (err: any) {
+    } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
         setError(err.response.data.message || 'Invalid credentials.');
       } else {

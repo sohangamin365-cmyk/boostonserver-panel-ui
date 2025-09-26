@@ -1,108 +1,92 @@
 'use client';
 
-import { FaFile, FaDatabase, FaGlobe, FaEnvelope, FaShieldAlt, FaChartBar, FaCog } from 'react-icons/fa';
-import { ReactNode, useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import Link from 'next/link'; // Import Link
+import { FaSpinner } from 'react-icons/fa';
 
-// --- TYPE DEFINITIONS ---
-interface StatsData {
-  diskUsage: { used: number; total: number };
-  bandwidth: { used: number; total: number };
-  databases: { used: number; total: number };
-  domains: { used: number; total: number };
-  emailAccounts: { used: number; total: number };
-}
-
-// --- HELPER COMPONENTS ---
-const Section = ({ title, children }: { title: string, children: ReactNode }) => (
-  <div className="bg-gray-800/50 rounded-lg shadow-lg p-6 mb-8">
-    <h2 className="text-xl font-bold text-gray-300 border-b border-gray-700 pb-3 mb-6">{title}</h2>
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-      {children}
-    </div>
-  </div>
-);
-
-const FeatureIcon = ({ icon, label, href = "#" }: { icon: ReactNode, label: string, href?: string }) => (
-  <a href={href} className="flex flex-col items-center justify-center text-center text-gray-400 hover:text-cyan-400 transition-colors duration-200">
-    <div className="text-4xl mb-2">{icon}</div>
-    <span className="text-sm font-medium">{label}</span>
-  </a>
-);
-
-// --- MAIN DASHBOARD COMPONENT ---
-export default function UserDashboard() {
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function LoginPage() {
+  const router = useRouter();
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('password');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get('http://localhost:3001/api/stats', {
-          headers: { 'x-api-key': 'bsp-agent-secret-key-c4a5b6d7e8f9' }
-        });
-        setStats(response.data);
-        setError(null);
-      } catch (err) {
-        setError('Failed to connect to the agent. Is it running?');
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      await axios.post('http://localhost:3001/api/auth/login', { username, password });
+      // On successful login, redirect to the dashboard.
+      // In a real app, we would receive and store a JWT token here.
+      router.push('/dashboard');
+    } catch (err: any) {
+      if (axios.isAxiosError(err) && err.response) {
+        setError(err.response.data.message || 'Invalid credentials.');
+      } else {
+        setError('Failed to connect to the server. Is the agent running?');
       }
-    };
-
-    fetchStats();
-  }, []);
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-800/80 p-6 hidden md:block flex-shrink-0">
-        <div className="text-2xl font-bold text-cyan-400 mb-8">BoostonServer Panel</div>
-        <h3 className="text-lg font-semibold text-gray-300 mb-4">Statistics</h3>
-        <div className="space-y-3 text-sm text-gray-400">
-          {loading && <div>Loading stats...</div>}
-          {error && <div className="text-red-400">{error}</div>}
-          {stats && (
-            <ul>
-              <li><span className="font-bold">Disk Usage:</span> {stats.diskUsage.used} / {stats.diskUsage.total} GB</li>
-              <li><span className="font-bold">Bandwidth:</span> {stats.bandwidth.used} / {stats.bandwidth.total} GB</li>
-              <li><span className="font-bold">Databases:</span> {stats.databases.used} / {stats.databases.total}</li>
-              <li><span className="font-bold">Domains:</span> {stats.domains.used} / {stats.domains.total}</li>
-              <li><span className="font-bold">Email Accounts:</span> {stats.emailAccounts.used} / {stats.emailAccounts.total}</li>
-            </ul>
-          )}
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="w-full max-w-md p-8 space-y-8 bg-gray-800/50 rounded-lg shadow-lg">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-cyan-400">BoostonServer Panel</h1>
+          <p className="mt-2 text-gray-400">Please sign in to continue</p>
         </div>
-      </aside>
+        <form className="space-y-6" onSubmit={handleLogin}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 bg-gray-900 placeholder-gray-500 text-gray-300 rounded-t-md focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 sm:text-sm"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </div>
+            <div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 bg-gray-900 placeholder-gray-500 text-gray-300 rounded-b-md focus:outline-none focus:ring-cyan-500 focus:border-cyan-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </div>
 
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        <h1 className="text-3xl font-bold text-gray-200 mb-8">Welcome, User!</h1>
-        <Section title="FILES">
-          <Link href="/files">
-            <FeatureIcon icon={<FaFile />} label="File Manager" />
-          </Link>
-          <FeatureIcon icon={<FaChartBar />} label="Disk Usage" />
-        </Section>
-        <Section title="DATABASES">
-          <FeatureIcon icon={<FaDatabase />} label="MySQL Databases" />
-          <FeatureIcon icon={<FaCog />} label="MySQL Wizard" />
-        </Section>
-        <Section title="DOMAINS">
-          <FeatureIcon icon={<FaGlobe />} label="Domains" />
-          <FeatureIcon icon={<FaCog />} label="Zone Editor" />
-        </Section>
-        <Section title="EMAIL">
-          <FeatureIcon icon={<FaEnvelope />} label="Email Accounts" />
-          <FeatureIcon icon={<FaCog />} label="Forwarders" />
-        </Section>
-        <Section title="SECURITY">
-          <FeatureIcon icon={<FaShieldAlt />} label="SSL/TLS Status" />
-        </Section>
-      </main>
+          {error && (
+            <div className="text-red-400 text-sm text-center">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 disabled:opacity-50"
+            >
+              {loading && <FaSpinner className="animate-spin mr-2" />}
+              Sign in
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

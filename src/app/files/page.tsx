@@ -86,7 +86,7 @@ export default function FileManagerPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold text-gray-200">File Manager</h1>
-            <Link href="/" className="text-cyan-400 hover:text-cyan-300">&#8592; Back to Dashboard</Link>
+            <Link href="/dashboard" className="text-cyan-400 hover:text-cyan-300">&#8592; Back to Dashboard</Link>
         </div>
         <div className="text-gray-400 mb-4">Current Path: {currentPath}</div>
 
